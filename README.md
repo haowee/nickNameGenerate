@@ -78,13 +78,12 @@ curl "http://localhost:3456/api/styles"
 ### 构建镜像
 
 ```bash
-docker build -t huaming-app .
-```
+docker build -t nickname-generator .
 
 ### 运行容器
 
 ```bash
-docker run -d -p 3456:3456 huaming-app
+docker run -d -p 3456:3456 nickname-generator
 ```
 
 ### 验证
