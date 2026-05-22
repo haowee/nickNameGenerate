@@ -687,7 +687,7 @@ async function generate() {
       setTimeout(() => item.classList.remove('copied-flash'), 600);
     };
 
-    navigator.clipboard.writeText(name).then(done).catch(() => {
+    const copy = () => {
       try {
         const ta = document.createElement('textarea');
         ta.value = name;
@@ -696,11 +696,19 @@ async function generate() {
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        done();
+        return true;
       } catch {
-        showToast('复制失败');
+        return false;
       }
-    });
+    };
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(name).then(done).catch(() => { if (copy()) done(); else showToast('复制失败'); });
+    } else if (copy()) {
+      done();
+    } else {
+      showToast('复制失败');
+    }
   };
 
   btn.disabled = false;
