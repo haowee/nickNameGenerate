@@ -337,7 +337,7 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   border: 4px solid transparent;
   border-top-color: rgba(0,0,0,0.85);
 }
-.name-item.show-tooltip .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.name-item:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); transition-delay: 0.3s; }
 .name-item .index-num {
   position: absolute;
   top: 4px;
@@ -675,39 +675,33 @@ async function generate() {
   html += '</div>';
   resultsDiv.innerHTML = html;
 
-  resultsDiv.querySelectorAll('.name-item').forEach(el => {
-    let tooltipTimer;
-    el.addEventListener('mouseenter', () => {
-      tooltipTimer = setTimeout(() => el.classList.add('show-tooltip'), 300);
+  resultsDiv.onclick = function(e) {
+    const item = e.target.closest('.name-item');
+    if (!item) return;
+    const name = item.dataset.name;
+    if (!name) return;
+
+    const done = () => {
+      showToast(`已复制「${name}」`);
+      item.classList.add('copied-flash');
+      setTimeout(() => item.classList.remove('copied-flash'), 600);
+    };
+
+    navigator.clipboard.writeText(name).then(done).catch(() => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = name;
+        ta.style.cssText = 'position:fixed;left:-9999px;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch {
+        showToast('复制失败');
+      }
     });
-    el.addEventListener('mouseleave', () => {
-      clearTimeout(tooltipTimer);
-      el.classList.remove('show-tooltip');
-    });
-    el.addEventListener('click', () => {
-      const name = el.dataset.name;
-      navigator.clipboard.writeText(name).then(() => {
-        showToast(`已复制「${name}」`);
-        el.classList.add('copied-flash');
-        setTimeout(() => el.classList.remove('copied-flash'), 600);
-      }).catch(() => {
-        try {
-          const ta = document.createElement('textarea');
-          ta.value = name;
-          ta.style.cssText = 'position:fixed;left:-9999px;';
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-          showToast(`已复制「${name}」`);
-          el.classList.add('copied-flash');
-          setTimeout(() => el.classList.remove('copied-flash'), 600);
-        } catch {
-          showToast('复制失败');
-        }
-      });
-    });
-  });
+  };
 
   btn.disabled = false;
   btn.textContent = '生 成 花 名';
