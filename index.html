@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>花名生成器</title>
+<style>
+:root {
+  --primary: #e07a5f;
+  --primary-alt: #f2cc8f;
+  --accent: #81b29a;
+  --text: #fff;
+  --text-secondary: rgba(255,255,255,0.6);
+  --bg-alpha: rgba(255,255,255,0.05);
+  --border-alpha: rgba(255,255,255,0.1);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --transition-speed: 0.3s;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 16px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(224,122,95,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 50%, rgba(129,178,154,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.container {
+  background: var(--bg-alpha);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(26,26,46,0.85);
+  border: 1px solid var(--border-alpha);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 5vw, 40px);
+  width: min(580px, calc(100% - 32px));
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  animation: containerIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg at 50% 50%, transparent, rgba(224,122,95,0.03), transparent 30%, rgba(242,204,143,0.03), transparent 60%);
+  animation: rotateGlow 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateGlow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes containerIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(30px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+h1 {
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 6px;
+  font-size: 28px;
+  letter-spacing: 4px;
+  animation: fadeInUp 0.5s 0.15s both;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 28px;
+  letter-spacing: 2px;
+  animation: fadeInUp 0.5s 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s 0.25s both;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-group label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+select, input[type="number"] {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border-alpha);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+select:focus, input[type="number"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(224,122,95,0.15);
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#generateBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--primary), #e07a5f);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 3px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s;
+  animation: fadeInUp 0.5s 0.3s both;
+}
+#generateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(224,122,95,0.4);
+}
+#generateBtn:active { transform: translateY(0) scale(0.98); }
+
+#generateBtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-speed);
+}
+#generateBtn:hover::after { opacity: 1; }
+
+#generateBtn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: scale(0);
+  animation: rippleAnim 0.6s ease-out;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+#results {
+  margin-top: 24px;
+  min-height: 60px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-alpha);
+}
+
+.results-header .label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.results-header .count-badge {
+  background: var(--primary);
+  color: var(--text);
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.names-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.name-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-alpha);
+  border-radius: var(--radius);
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: nameIn 0.4s ease both;
+  overflow: hidden;
+}
+
+.name-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(224,122,95,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.name-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 20px rgba(224,122,95,0.15);
+}
+
+.name-item:hover::before {
+  opacity: 1;
+}
+
+.name-item:active {
+  transform: scale(0.96);
+}
+
+.name-item .tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(0,0,0,0.85);
+  color: var(--text);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.name-item .tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(0,0,0,0.85);
+}
+.name-item.show-tooltip .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.name-item .index-num {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.4;
+  font-family: 'Courier New', monospace;
+}
+
+@keyframes nameIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+}
+
+.name-item.copied-flash {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px rgba(129,178,154,0.3) !important;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40px 0;
+  font-size: 14px;
+  animation: fadeInUp 0.5s 0.35s both;
+}
+
+.empty-state .empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent);
+  color: var(--text);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  box-shadow: 0 8px 30px rgba(129,178,154,0.3);
+  z-index: 100;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.show.out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>✦ 花名生成器 ✦</h1>
+  <p class="subtitle">择一雅名 · 寄一缕意</p>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="category">选择风格</label>
+      <select id="category">
+        <option value="古风">古风</option>
+        <option value="民国">民国</option>
+        <option value="近代">近代</option>
+        <option value="仙侠">仙侠</option>
+        <option value="现代">现代</option>
+        <option value="诗意">诗意</option>
+        <option value="清雅">清雅</option>
+        <option value="江湖">江湖</option>
+        <option value="宫廷">宫廷</option>
+        <option value="森系">森系</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="gender">选择性别</label>
+      <select id="gender">
+        <option value="不限">不限</option>
+        <option value="男">男</option>
+        <option value="女">女</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="count">生成数量</label>
+      <input type="number" id="count" min="1" max="40" value="8">
+    </div>
+  </div>
+
+  <button id="generateBtn">生 成 花 名</button>
+
+  <div id="results">
+    <div class="empty-state">
+      <div class="empty-icon">🌸</div>
+      <div>选择风格，点击生成</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">已复制</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const nameData = {
+  古风: {
+    男: [
+      "墨染", "孤鸿", "凌波", "疏桐", "听雨", "问柳", "踏雪", "煮酒",
+      "抚琴", "折梅", "北笙", "青瓷", "竹马", "秋水", "春山", "松风",
+      "菩提", "书卷", "墨砚", "纸鸢", "竹简", "醉墨", "栖霞", "蒹葭",
+      "东篱", "云岫", "荷衣", "桂魄", "梧桐", "琉璃", "锦瑟", "埙篪",
+      "清歌", "忆安", "暮色", "惊梦", "南栀", "西窗", "白露", "红豆",
+      "长庚", "紫微", "北辰", "扶苏", "重光", "玄圭", "玉衡", "天权",
+      "开阳", "苍璧"
+    ],
+    女: [
+      "流萤", "笙箫", "沐雪", "轻舞", "寸心", "寒烟", "纤凝", "绮罗",
+      "素手", "浣月", "卿酒", "念白", "晚晴", "画眉", "采薇", "青梅",
+      "兰舟", "海棠", "丁香", "茉莉", "芙蓉", "菡萏", "琵琶", "箜篌",
+      "含烟", "凝霜", "梦蝶", "合欢", "杜鹃", "木兰", "蔷薇", "芍药",
+      "婵娟", "娉婷", "婀娜", "嫣然", "婉兮", "盼兮", "锦书", "红豆",
+      "春熙", "秋棠", "夏萤", "冬萼", "月华", "星眸", "雪肤", "云鬟"
+    ]
+  },
+  民国: {
+    男: [
+      "兆和", "陆离", "程蝶", "顾曼", "沈眉", "文秀", "书怡", "韵白",
+      "春霖", "半城", "意映", "萧红", "从文", "独醒", "自清", "苦禅",
+      "白石", "悲鸿", "玉麟", "伯苓", "寅恪", "元任", "大千", "衡山",
+      "树人", "独秀", "玄同", "语堂", "光潜", "宗岱", "星海", "耳东",
+      "莫言", "残雪", "余华", "苏童", "北岛", "顾城", "海子", "西川"
+    ],
+    女: [
+      "曼云", "兰君", "素秋", "依萍", "绮文", "秋棠", "惜君", "静安",
+      "宛如", "沁芳", "婉贞", "澹如", "静姝", "雅琴", "清欢", "若兰",
+      "晚亭", "素华", "徽因", "小曼", "爱玲", "萧红", "方瑜", "周璇",
+      "玉娇", "明珠", "慧茹", "秀贞", "月娥", "冬梅", "春兰", "秋菊",
+      "雅芝", "淑华", "慧心", "冰心", "绿漪", "采芹", "若梅", "碧云",
+      "紫薇", "梦华", "绮霞", "瑶光", "如月", "映雪", "素筠", "文姬"
+    ]
+  },
+  近代: {
+    男: [
+      "嘉木", "子衿", "瑾瑜", "思远", "浩然", "宇轩", "泽凯", "明哲",
+      "俊逸", "天翔", "博文", "景行", "维桢", "秉文", "令仪", "嘉言",
+      "廷玉", "国维", "仲甫", "季陶", "任之", "翼之", "行之", "知之",
+      "云逸", "雨泽", "晨阳", "暮寒", "秋实", "春华", "夏清", "冬蕴",
+      "程远", "路遥", "平川", "海阔", "山高", "云飞", "风扬", "雷厉"
+    ],
+    女: [
+      "晨曦", "夏荷", "悠然", "暖阳", "晴空", "舒怡", "安琪", "若曦",
+      "雨晴", "馨予", "语宁", "婉清", "佳琪", "安宁", "思雨", "梦溪",
+      "晓棠", "悦心", "诗涵", "艺萱", "梓萌", "若溪", "雨桐", "语嫣",
+      "笑颜", "欣然", "安好", "晴朗", "暖暖", "知夏", "初秋", "暖冬",
+      "春晓", "半夏", "暮春", "浅夏", "初雪", "云舒", "星野", "月白",
+      "风清", "花信", "如茵", "似锦", "嫣然", "含嫣", "若彤", "沐希"
+    ]
+  },
+  仙侠: {
+    男: [
+      "凌霄", "紫英", "云凡", "重华", "长琴", "扶摇", "东皇", "星魂",
+      "玄翦", "真刚", "断水", "转魄", "魍魉", "惊鲵", "掩日", "端木",
+      "白鹤", "朱雀", "玄武", "青龙", "白虎", "天枢", "天璇", "天玑",
+      "玉衡", "开阳", "摇光", "太微", "紫微", "天市", "少微", "文昌",
+      "玄霄", "云天", "青阳", "玉玑", "夙瑶", "霄哥", "玄震", "净明"
+    ],
+    女: [
+      "云裳", "星河", "霓裳", "紫萱", "碧霄", "若水", "玄机", "流光",
+      "星梦", "幽兰", "倾城", "凌波", "素问", "夜语", "天香", "流萤",
+      "霜华", "月汐", "风吟", "雪见", "龙葵", "雨柔", "羽裳", "琼华",
+      "冰晶", "焱妃", "弄玉", "少司命", "大司命", "湘君", "湘夫人",
+      "云中君", "山鬼", "月神", "晓梦", "焰灵", "雪女", "念端", "青鸾",
+      "紫女", "瑶姬", "精卫", "女魃", "旱魃", "蓐收", "句芒", "祝融"
+    ]
+  },
+  现代: {
+    男: [
+      "小北", "阿沐", "阿舟", "阿月", "阿宝", "阿细", "阿果", "阿柒",
+      "小楽", "小野", "小奈", "小希", "小禾", "拾光", "一诺", "一言",
+      "一念", "一安", "一然", "一凡", "一舟", "一禾", "初初", "小初",
+      "盛夏", "初阳", "洛尘", "星野", "云帆", "泽言", "亦辰", "子轩",
+      "慕白", "安宇", "景辰", "逸飞", "明煦", "清尘", "沐风", "亦然"
+    ],
+    女: [
+      "小满", "米果", "橘子", "甜橙", "小雨", "小鱼", "萌宝", "小暖",
+      "小汐", "小诗", "小悦", "七七", "九九", "十一", "沫沫", "果果",
+      "糖糖", "乐乐", "朵朵", "悠悠", "漫漫", "暖暖", "恬恬", "欣欣",
+      "悦悦", "初夏", "初晴", "初雪", "初彤", "初昕", "知夏", "若溪",
+      "柠萌", "桃子", "布丁", "奶茶", "果冻", "甜心", "贝贝", "宝宝",
+      "一一", "二二", "杉杉", "兰兰", "慧慧", "甜甜", "蜜蜜", "朵朵"
+    ]
+  },
+  诗意: {
+    男: [
+      "山隐", "水穷", "松声", "烟波", "林泉", "溪亭", "松涛", "竹露",
+      "暮鼓", "渔舟", "樵歌", "耕云", "钓雪", "听泉", "抚松", "问竹",
+      "采菊", "吟风", "弄月", "眠云", "抱琴", "枕石", "漱玉", "餐霞",
+      "沧溟", "翠微", "白虹", "玉绳", "金波", "冰轮", "瑶台", "阆苑",
+      "寒江", "孤舟", "蓑笠", "柴门", "竹扉", "松径", "苔阶", "石矶"
+    ],
+    女: [
+      "花间", "月下", "风起", "云归", "雨落", "雪飘", "竹影", "梅韵",
+      "兰馨", "荷风", "桂香", "菊篱", "苔痕", "竹露", "梅雪", "朝露",
+      "晚晴", "春晖", "秋月", "夏蝉", "冬雪", "晨钟", "醉花", "碧落",
+      "青岚", "素霓", "紫烟", "丹霞", "星河", "银汉", "蓬岛", "兰舟",
+      "烟霞", "雾绡", "霜纨", "冰绡", "云锦", "霞帔", "月珮", "风裳"
+    ]
+  },
+  清雅: {
+    男: [
+      "素心", "淡月", "微云", "浅草", "静秋", "远山", "近水", "浮生",
+      "若茶", "如菊", "似兰", "比竹", "空谷", "虚竹", "幽篁", "白芷",
+      "青萍", "绿萝", "碧荷", "澄澈", "温润", "如玉", "似水", "如月",
+      "怀瑾", "握瑜", "清漪", "涟漪", "潋滟", "皎洁", "如初", "如故",
+      "若谷", "虚怀", "澹泊", "明志", "宁静", "致远", "洗心", "忘机"
+    ],
+    女: [
+      "疏影", "暗香", "清露", "幽兰", "玉兰", "沐雨", "听雪", "拾花",
+      "裁云", "掬水", "弄影", "佩兰", "纫蕙", "芰荷", "芙蓉", "杜若",
+      "蘅芜", "玲珑", "璀璨", "若兰", "如烟", "如梦", "含烟", "凝霜",
+      "映雪", "凌霜", "傲雪", "素影", "清辉", "淡痕", "浅黛", "轻颦",
+      "蒹葭", "白露", "伊人", "在水", "一方", "南乔", "乔木", "青青"
+    ]
+  },
+  江湖: {
+    男: [
+      "长风", "破浪", "凌云", "逐月", "追风", "惊鸿", "游龙", "倚天",
+      "屠龙", "碧血", "丹心", "青锋", "紫电", "霜刃", "碎星", "残月",
+      "孤影", "寒江", "独钓", "醉卧", "白衣", "青衫", "紫衣", "素袍",
+      "玄甲", "赤练", "剑心", "琴胆", "书魂", "酒魄", "侠骨", "铁血",
+      "飞燕", "惊雷", "断浪", "挽歌", "听禅", "问道", "忘忧", "解语",
+      "慕容", "上官", "南宫", "北堂", "东方", "西门", "司徒", "司空"
+    ],
+    女: [
+      "落叶", "飞花", "红尘", "碧落", "柔肠", "豪情", "倾城", "红颜",
+      "霓裳", "羽衣", "倩影", "芳踪", "玉箫", "银筝", "锦瑟", "琵琶",
+      "紫烟", "翠袖", "红绡", "香囊", "团扇", "罗帕", "绣鞋", "珠钗",
+      "云鬓", "花容", "月貌", "冰肌", "玉骨", "蕙质", "兰心", "柳眉",
+      "杏眼", "桃腮", "樱唇", "贝齿", "纤纤", "素素", "盈盈", "脉脉",
+      "怜星", "邀月", "月奴", "铁心", "水灵", "白凤", "青龙", "朱雀"
+    ]
+  },
+  宫廷: {
+    男: [
+      "承乾", "景仁", "永寿", "长春", "鸿蒙", "紫宸", "玄烨", "胤禛",
+      "弘历", "永琏", "绵宁", "奕詝", "载淳", "载湉", "溥仪", "允祥",
+      "胤祥", "胤禩", "胤禟", "胤誐", "胤祯", "胤禵", "福全", "常宁",
+      "隆禧", "永璇", "永瑢", "永琰", "永璘", "绵恺", "绵忻", "奕纬",
+      "奕纲", "奕继", "奕譞", "奕訢", "载沣", "载涛", "载洵", "载振"
+    ],
+    女: [
+      "如意", "吉祥", "婉容", "淑慎", "德龄", "瑾妃", "珍妃", "容妃",
+      "令妃", "华妃", "端妃", "齐妃", "晴川", "若曦", "良娣", "昭仪",
+      "贵人", "常在", "答应", "福晋", "格格", "公主", "郡主", "县主",
+      "玄姝", "明仪", "清宁", "昭华", "瑞锦", "祥云", "凤仪", "鸾鸣",
+      "月华", "云影", "星辉", "霞光", "琼枝", "玉叶", "金枝", "宝钗",
+      "玉环", "飞燕", "合德", "貂蝉", "西施", "昭君", "文成", "金城"
+    ]
+  },
+  森系: {
+    男: [
+      "青苔", "藤萝", "蕨草", "松萝", "桦语", "枫晚", "杉影", "栎秋",
+      "鹿鸣", "橡果", "松塔", "落叶", "年轮", "山岚", "谷风", "知更",
+      "白桦", "冷杉", "红松", "银杏", "梧桐", "菩提", "橡树", "橄榄",
+      "薄雾", "微岚", "轻霭", "霁月", "清风", "青黛", "艾草", "芦荟",
+      "柏舟", "松舟", "竹筏", "木樨", "辛夷", "檀香", "沉香", "紫檀"
+    ],
+    女: [
+      "鸢尾", "雏菊", "铃兰", "风信", "迷迭", "薄荷", "薰衣", "萤火",
+      "夜莺", "百灵", "翠鸟", "云雀", "山雀", "画眉", "凝露", "朝露",
+      "晨曦", "夕照", "茉莉", "栀子", "蔷薇", "紫藤", "忍冬", "合欢",
+      "木樨", "辛夷", "半夏", "白薇", "紫菀", "桔梗", "百合", "丁香",
+      "杜鹃", "牡丹", "芍药", "水仙", "莲花", "梅花", "桃花", "杏花",
+      "碧萝", "文竹", "吊兰", "绿萝", "常春", "绣球", "雏菊", "满天"
+    ]
+  }
+};
+
+const toastEl = $('toast');
+let toastTimer;
+
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  toastEl.textContent = msg;
+  toastEl.classList.remove('show', 'out');
+  void toastEl.offsetWidth;
+  toastEl.classList.add('show');
+  toastTimer = setTimeout(() => {
+    toastEl.classList.add('out');
+    setTimeout(() => toastEl.classList.remove('show', 'out'), 350);
+  }, 1800);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generate() {
+  const category = $('category').value;
+  const gender = $('gender').value;
+  const count = Math.min(parseInt($('count').value) || 1, 40);
+  const resultsDiv = $('results');
+
+  const catData = nameData[category];
+  let pool;
+
+  if (gender === '不限') {
+    const merged = [...(catData.男 || []), ...(catData.女 || [])];
+    pool = [...new Set(merged)];
+  } else {
+    pool = catData[gender] || [];
+  }
+
+  if (!pool || pool.length === 0) {
+    resultsDiv.innerHTML = '<div class="empty-state"><div class="empty-icon">😕</div><div>暂无该风格数据</div></div>';
+    return;
+  }
+
+  const shuffled = shuffle(pool);
+  const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+
+  let html = '<div class="results-header">';
+  const genderLabel = gender === '不限' ? '' : ` · ${gender}性`;
+  html += `<span class="label">✦ ${category}${genderLabel} · 共 ${selected.length} 个</span>`;
+  html += `<span class="count-badge">${selected.length}</span>`;
+  html += '</div>';
+  html += '<div class="names-grid">';
+
+  selected.forEach((name, i) => {
+    html += `<div class="name-item" data-name="${name}" style="animation-delay:${i * 0.04}s">
+      <span class="index-num">${String(i + 1).padStart(2, '0')}</span>
+      ${name}
+      <span class="tooltip">点击复制</span>
+    </div>`;
+  });
+
+  html += '</div>';
+  resultsDiv.innerHTML = html;
+
+  resultsDiv.querySelectorAll('.name-item').forEach(el => {
+    let tooltipTimer;
+
+    el.addEventListener('mouseenter', () => {
+      tooltipTimer = setTimeout(() => el.classList.add('show-tooltip'), 300);
+    });
+    el.addEventListener('mouseleave', () => {
+      clearTimeout(tooltipTimer);
+      el.classList.remove('show-tooltip');
+    });
+
+    el.addEventListener('click', () => {
+      const name = el.dataset.name;
+      const doCopy = () => {
+        navigator.clipboard.writeText(name).then(() => {
+          showToast(`已复制「${name}」`);
+          el.classList.add('copied-flash');
+          setTimeout(() => el.classList.remove('copied-flash'), 600);
+        }).catch(() => {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = name;
+            ta.style.cssText = 'position:fixed;left:-9999px;';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(`已复制「${name}」`);
+            el.classList.add('copied-flash');
+            setTimeout(() => el.classList.remove('copied-flash'), 600);
+          } catch {
+            showToast('复制失败');
+          }
+        });
+      };
+      doCopy();
+    });
+  });
+}
+
+$('generateBtn').addEventListener('click', function(e) {
+  generate();
+  const rect = this.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  this.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
+
+$('count').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generate();
+});
+
+generate();
+</script>
+</body>
+</html>
