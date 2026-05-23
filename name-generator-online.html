@@ -656,6 +656,7 @@ async function generate() {
       usedEngine.push({
         name: n,
         meta: from && from.meta ? from.meta : '',
+        verse: from && from.verse ? from.verse : '',
         source: from ? from.source || '字库' : '本地',
         isEngine: true
       });
@@ -699,10 +700,11 @@ async function generate() {
   html += '</div>';
   html += '<div class="names-grid">';
 
-  displayNames.forEach((item, i) => {
+    displayNames.forEach((item, i) => {
     const showSource = item.isEngine && item.source;
     const showMeta = item.isEngine && item.meta;
-    html += `<div class="name-item" data-name="${item.name}" style="animation-delay:${i * 0.04}s">
+    const tip = item.verse ? `${item.verse} —— ${item.meta}` : (showSource ? item.source : '');
+    html += `<div class="name-item" data-name="${item.name}" title="${tip}" style="animation-delay:${i * 0.04}s">
       <span class="index-num">${String(i + 1).padStart(2, '0')}</span>
       <span class="name-text">${item.name}</span>
       ${showSource ? `<span class="source-label">${item.source}</span>` : ''}

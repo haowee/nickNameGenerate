@@ -95,11 +95,21 @@ app.get('/api/huaming', (req, res) => {
     try {
       const hua = new HuaSource({ source: config.source, count: count * 2 });
       const raw = hua.generate();
-      names = raw.map(n => ({
-        name: n.toString(),
-        meta: n._meta ? `${n._meta.author || ''}《${n._meta.title || ''}》` : '',
-        source: STYLE_SOURCE_LABEL[style]
-      }));
+      names = raw.map(n => {
+        const nameStr = n.toString();
+        let verse = '';
+        if (n._meta && n._meta.content) {
+          const sentences = n._meta.content.split(/[，。！？；、：""''「」【】《》（）\n\r]/).filter(Boolean);
+          const found = sentences.find(s => s.includes(nameStr));
+          if (found) verse = found.trim();
+        }
+        return {
+          name: nameStr,
+          meta: n._meta ? `${n._meta.author || ''}《${n._meta.title || ''}》` : '',
+          verse,
+          source: STYLE_SOURCE_LABEL[style]
+        };
+      });
     } catch {
       names = [];
     }
