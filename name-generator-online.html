@@ -102,7 +102,7 @@ h1 {
   margin-bottom: 8px;
   letter-spacing: 1px;
 }
-select, input[type="number"] {
+select, input[type="number"], input[type="text"] {
   width: 100%;
   padding: 10px 14px;
   background: rgba(255,255,255,0.08);
@@ -126,7 +126,7 @@ select option {
   background: #1a1a2e;
   color: #fff;
 }
-select:focus, input[type="number"]:focus {
+select:focus, input[type="number"]:focus, input[type="text"]:focus {
   border-color: var(--primary);
   box-shadow: 0 0 20px rgba(224,122,95,0.15);
 }
@@ -486,6 +486,10 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
       </select>
     </div>
     <div class="form-group">
+      <label for="surname">输入姓氏</label>
+      <input type="text" id="surname" maxlength="4" placeholder="可选">
+    </div>
+    <div class="form-group">
       <label for="count">生成数量</label>
       <input type="number" id="count" min="1" max="50" value="8">
     </div>
@@ -585,8 +589,9 @@ function parseStyle(opt) {
   return m ? m[1] : opt;
 }
 
-async function fetchFromEngine(style, gender, count) {
+async function fetchFromEngine(style, gender, count, surname) {
   const params = new URLSearchParams({ style, gender, count });
+  if (surname) params.set('surname', surname);
   const res = await fetch(`${ENGINE_API}?${params}`);
   if (!res.ok) throw new Error('server error');
   const json = await res.json();
@@ -598,6 +603,7 @@ async function generate() {
   const category = parseStyle(categoryRaw);
   const gender = $('gender').value;
   const count = Math.min(parseInt($('count').value) || 1, 50);
+  const surname = ($('surname').value || '').trim();
   const engineMode = $('engineToggle').checked;
    const localOnly = ['民国', '文雅', '新潮'].includes(category);
   const resultsDiv = $('results');
@@ -618,7 +624,7 @@ async function generate() {
 
   if (engineMode && !localOnly) {
     try {
-      engineNames = await fetchFromEngine(category, gender, count);
+      engineNames = await fetchFromEngine(category, gender, count, surname);
       engineOk = engineNames.length > 0;
       if (engineOk) setStatus('engine', `引擎就绪 · 来自 ${engineNames[0].source || '字库'}`);
       else setStatus('offline', '引擎无返回，切换本地模式');
@@ -658,7 +664,7 @@ async function generate() {
       const localFiltered = localPool.filter(n => !engineOnly.includes(n));
       const shuffledLocal = shuffle(localFiltered);
       for (const n of shuffledLocal.slice(0, need)) {
-        usedLocal.push({ name: n, meta: '', source: '本地', isEngine: false });
+        usedLocal.push({ name: surname ? surname + n : n, meta: '', source: '本地', isEngine: false });
       }
     }
 
@@ -668,7 +674,7 @@ async function generate() {
     const shuffled = shuffle(localPool);
     const selected = shuffled.slice(0, Math.min(count, shuffled.length));
     displayNames = selected.map(n => ({
-      name: n, meta: '', source: '本地', isEngine: false
+      name: surname ? surname + n : n, meta: '', source: '本地', isEngine: false
     }));
   }
 

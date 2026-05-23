@@ -86,6 +86,7 @@ app.get('/api/huaming', (req, res) => {
   const count = Math.min(parseInt(req.query.count) || 10, 50);
   const style = Object.keys(STYLE_MAP).includes(req.query.style) ? req.query.style : '古风';
   const gender = ['男', '女', '不限'].includes(req.query.gender) ? req.query.gender : '不限';
+  const surname = req.query.surname || '';
 
   const config = STYLE_MAP[style];
   let names = [];
@@ -133,6 +134,7 @@ app.get('/api/huaming', (req, res) => {
   }
 
   const result = unique.slice(0, count);
+  if (surname) result.forEach(n => { n.name = surname + n.name; });
   res.json({ code: 200, data: result, total: result.length });
 });
 
