@@ -197,6 +197,7 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 #statusBar .dot.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 #statusBar .dot.offline { background: #e0a040; }
 #statusBar .dot.engine { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+#statusBar .dot.local { background: var(--accent); }
 
 #generateBtn {
   width: 100%;
@@ -442,15 +443,38 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
       <label for="category">选择风格</label>
       <select id="category">
         <option value="古风">古风 · 楚辞</option>
-        <option value="诗意">诗意 · 唐诗</option>
+        <option value="诗意">诗意 · 宋词</option>
         <option value="清雅">清雅 · 诗经</option>
         <option value="江湖">江湖 · 宋词</option>
-        <option value="仙侠">仙侠 · 楚辞</option>
-        <option value="民国">民国 · 字库</option>
-        <option value="近代">近代 · 字库</option>
-        <option value="现代">现代 · 字库</option>
-        <option value="宫廷">宫廷 · 字库</option>
-        <option value="森系">森系 · 字库</option>
+        <option value="仙侠">仙侠 · 唐诗</option>
+        <option value="金·金金">金金 · 五行</option>
+        <option value="金·金木">金木 · 五行</option>
+        <option value="金·金水">金水 · 五行</option>
+        <option value="金·金火">金火 · 五行</option>
+        <option value="金·金土">金土 · 五行</option>
+        <option value="木·木木">木木 · 五行</option>
+        <option value="木·木水">木水 · 五行</option>
+        <option value="木·木火">木火 · 五行</option>
+        <option value="木·木土">木土 · 五行</option>
+        <option value="木·木金">木金 · 五行</option>
+        <option value="水·水水">水水 · 五行</option>
+        <option value="水·水木">水木 · 五行</option>
+        <option value="水·水火">水火 · 五行</option>
+        <option value="水·水土">水土 · 五行</option>
+        <option value="水·水金">水金 · 五行</option>
+        <option value="火·火火">火火 · 五行</option>
+        <option value="火·火木">火木 · 五行</option>
+        <option value="火·火水">火水 · 五行</option>
+        <option value="火·火土">火土 · 五行</option>
+        <option value="火·火金">火金 · 五行</option>
+        <option value="土·土土">土土 · 五行</option>
+        <option value="土·土木">土木 · 五行</option>
+        <option value="土·土水">土水 · 五行</option>
+        <option value="土·土火">土火 · 五行</option>
+        <option value="土·土金">土金 · 五行</option>
+        <option value="民国">民国 · 本地</option>
+        <option value="近代">近代 · 本地</option>
+        <option value="现代">现代 · 本地</option>
       </select>
     </div>
     <div class="form-group">
@@ -575,6 +599,7 @@ async function generate() {
   const gender = $('gender').value;
   const count = Math.min(parseInt($('count').value) || 1, 50);
   const engineMode = $('engineToggle').checked;
+  const localOnly = ['民国', '近代', '现代'].includes(category);
   const resultsDiv = $('results');
   const btn = $('generateBtn');
 
@@ -584,14 +609,14 @@ async function generate() {
   resultsDiv.innerHTML = `
     <div class="loading-overlay show">
       <div class="spinner"></div>
-      <div class="hint">${engineMode ? 'huaming 引擎生成中…' : '正在生成花名…'}</div>
+      <div class="hint">${engineMode && !localOnly ? 'huaming 引擎生成中…' : '正在生成花名…'}</div>
     </div>
   `;
 
   let engineNames = [];
   let engineOk = false;
 
-  if (engineMode) {
+  if (engineMode && !localOnly) {
     try {
       engineNames = await fetchFromEngine(category, gender, count);
       engineOk = engineNames.length > 0;
@@ -600,6 +625,12 @@ async function generate() {
     } catch {
       setStatus('offline', '引擎未启动，使用本地花名库');
     }
+  }
+
+  if (localOnly) {
+    setStatus('local', '本地词库 · 就绪');
+  } else if (!engineMode) {
+    setStatus('offline', '引擎已关闭 · 使用本地花名库');
   }
 
   const localPool = getLocalPool(category, gender);
